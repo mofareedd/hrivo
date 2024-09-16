@@ -1,8 +1,8 @@
 import { Pool } from "pg";
+import { env } from "./env";
 
 const pool = new Pool({
-  connectionString:
-    "postgresql://hr_owner:JHPhpAi62nWO@ep-quiet-brook-a2ly2lio.eu-central-1.aws.neon.tech/hr?sslmode=require",
+  connectionString: env.POSTGRES_HOST,
   max: 20,
   idleTimeoutMillis: 30000,
 });
