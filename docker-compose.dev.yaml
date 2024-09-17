@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: ./api
+      target: development
+    restart: unless-stopped
+    env_file:
+      - ./api/.env
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./api:/app
+      - /app/node_modules
