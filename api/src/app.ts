@@ -8,9 +8,13 @@ const app = express();
 
 // v1 routes
 app.use("/v1/auth", usersRoute);
+
+// Handle undefined routes
 app.all("*", (req, res, next) => {
-	next(new HttpException(`${req.originalUrl} not found!`, STATUS.BAD_REQUEST));
+	next(new HttpException(`${req.originalUrl} not found!`, STATUS.NOT_FOUND));
 });
+
+// Global error handler
 app.use(errorsHandler);
 
 export { app };
