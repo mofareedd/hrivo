@@ -11,16 +11,19 @@ export async function signupUser({
 	user,
 	userAgent,
 }: { user: SignupInput; userAgent?: string }) {
+	// Check if the user already exists based on the email.
 	const isUserExisit = await db
 		.selectFrom("users")
 		.select(["email", "username"])
 		.where("email", "=", user.email)
 		.executeTakeFirst();
 
+	// Throw an exception if the user already exists.
 	if (isUserExisit) {
 		throw new HttpException("User is already exisit", STATUS.CONFLICT);
 	}
 
+	// Hash the user's password before storing it.
 	const hashPass = await bcrypt.hash(user.password, 10);
 
 	const newUser = await db
@@ -29,6 +32,7 @@ export async function signupUser({
 		.returningAll()
 		.executeTakeFirst();
 
+	// Throw an exception if the user registration fails.
 	if (!newUser) {
 		throw new HttpException(
 			"Ops! Failed to register user, Please try again later!",
@@ -36,6 +40,7 @@ export async function signupUser({
 		);
 	}
 
+	// Create a session for the newly registered user.
 	const session = await db
 		.insertInto("sessions")
 		.values({ user_id: newUser.id, user_agent: userAgent })
@@ -49,6 +54,7 @@ export async function signupUser({
 		);
 	}
 
+	// Generate JWT tokens for the user.
 	const refreshToken = signJwt({ id: session.id }, "refreshToken", {
 		expiresIn: "30d",
 	});
@@ -61,6 +67,7 @@ export async function signupUser({
 		},
 	);
 
+	// Exclude the password from the user info
 	const { password, ...userInfo } = newUser;
 
 	return { userInfo, accessToken, refreshToken };
