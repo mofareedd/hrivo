@@ -11,7 +11,9 @@ function getEnv(key: string, defaultValue?: string) {
 const env = {
 	PORT: getEnv("PORT", "1337"),
 	NODE_ENV: getEnv("NODE_ENV", "development"),
-	POSTGRES_HOST: getEnv("POSTGRES_HOST"),
+	DATABASE_URL: getEnv("DATABASE_URL"),
+	JWT_SECRET: getEnv("JWT_SECRET"),
+	JWT_REFRESH_SECRET: getEnv("JWT_REFRESH_SECRET"),
 };
 
 export { env };
