@@ -16,6 +16,7 @@ export function signJwt(
 			: env.ACCESS_TOKEN_PRIVATE_KEY;
 	return jwt.sign(payload, secret, {
 		audience: ["auth"],
+		expiresIn: keyName === "refreshToken" ? "30d" : "15m",
 		...options,
 	});
 }

@@ -1,7 +1,7 @@
 import { db } from "@/config/db";
 import { env } from "@/config/env";
 import { STATUS } from "@/constant/status";
-import type { SignupInput } from "@/schema/user.schema";
+import type { LoginInput, SignupInput } from "@/schema/user.schema";
 import { getVerifyEmailTemplate } from "@/utils/emailTemplate";
 import { HttpException } from "@/utils/exception";
 import { signJwt } from "@/utils/jwt";
@@ -36,7 +36,7 @@ export async function signupUser({
 	// Throw an exception if the user registration fails.
 	if (!newUser) {
 		throw new HttpException(
-			"Ops! Failed to register user, Please try again later!",
+			"Failed to register user, Please try again later!",
 			STATUS.BAD_REQUEST,
 		);
 	}
@@ -78,22 +78,17 @@ export async function signupUser({
 
 	if (!session) {
 		throw new HttpException(
-			"Ops! Failed to create a session, Please try again later!",
+			"Failed to create a session, Please try again later!",
 			STATUS.BAD_REQUEST,
 		);
 	}
 
 	// Generate JWT tokens for the user.
-	const refreshToken = signJwt({ id: session.id }, "refreshToken", {
-		expiresIn: "30d",
-	});
+	const refreshToken = signJwt({ id: session.id }, "refreshToken");
 
 	const accessToken = signJwt(
 		{ userId: newUser.id, sessionId: session.id },
 		"accessToken",
-		{
-			expiresIn: "15m",
-		},
 	);
 
 	// Exclude the password from the user info
@@ -124,7 +119,7 @@ export async function verifyEmail({ code }: { code: string }) {
 		.executeTakeFirst();
 
 	if (!user) {
-		throw new HttpException("User is not exisit", STATUS.BAD_REQUEST);
+		throw new HttpException("User is not exisit", STATUS.UNAUTHORIZED);
 	}
 
 	// Delete the verification record from the database
@@ -137,4 +132,52 @@ export async function verifyEmail({ code }: { code: string }) {
 	const { password, ...userInfo } = user;
 
 	return userInfo;
+}
+
+export async function loginUser({
+	user,
+	userAgent,
+}: { user: LoginInput; userAgent?: string }) {
+	const isUserExisit = await db
+		.selectFrom("users")
+		.selectAll()
+		.where("username", "=", user.username)
+		.executeTakeFirst();
+
+	if (!isUserExisit) {
+		throw new HttpException("User is not exisit", STATUS.UNAUTHORIZED);
+	}
+
+	const comparePass = await bcrypt.compare(
+		user.password,
+		isUserExisit.password,
+	);
+
+	if (!comparePass) {
+		throw new HttpException(
+			"Invalid username or password",
+			STATUS.UNAUTHORIZED,
+		);
+	}
+
+	const session = await db
+		.insertInto("sessions")
+		.values({ user_id: isUserExisit.id, user_agent: userAgent })
+		.returning("id")
+		.executeTakeFirst();
+
+	if (!session) {
+		throw new HttpException(
+			"Failed to create a session, Please try again later!",
+			STATUS.BAD_REQUEST,
+		);
+	}
+
+	const refreshToken = signJwt({ id: session.id }, "refreshToken");
+	const accessToken = signJwt({ id: session.id }, "accessToken");
+
+	// Exclude the password from the user info
+	const { password, ...userInfo } = isUserExisit;
+
+	return { userInfo, accessToken, refreshToken };
 }
