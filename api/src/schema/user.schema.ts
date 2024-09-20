@@ -14,4 +14,11 @@ export const signupSchema = z.object({
 	}),
 });
 
+export const verifyEmailSchema = z.object({
+	params: z.object({
+		code: z.string().min(16, "Invalid Code"),
+	}),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>["body"];
+export type VerifyEmailParams = z.infer<typeof verifyEmailSchema>["params"];
