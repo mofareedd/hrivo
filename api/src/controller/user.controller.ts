@@ -1,8 +1,26 @@
-import { db } from "@/config/db";
+import { STATUS } from "@/constant/status";
+import type { SignupInput, VerifyEmailParams } from "@/schema/user.schema";
+import { signupUser, verifyEmail } from "@/service/user.service";
 import { catchAsync } from "@/utils/catchAsync";
+import type { Request, RequestHandler } from "express";
 
-export const signupHandler = catchAsync(async (req, res, next) => {
-	const users = await db.selectFrom("users").selectAll().execute();
+export const signupHandler = catchAsync(
+	async (req: Request<unknown, unknown, SignupInput>, res, next) => {
+		const { accessToken, refreshToken, userInfo } = await signupUser({
+			user: req.body,
+			userAgent: req.headers["user-agent"],
+		});
 
-	res.status(200).json(users);
-});
+		res.cookie("accessToken", accessToken).cookie("refreshToken", refreshToken);
+
+		res.status(STATUS.OK).json(userInfo);
+	},
+);
+
+export const verifyEmailHandler: RequestHandler<VerifyEmailParams> = catchAsync(
+	async (req, res, next) => {
+		await verifyEmail({ code: req.params.code });
+
+		res.status(STATUS.OK).json({ message: "Email was successfully verified" });
+	},
+);

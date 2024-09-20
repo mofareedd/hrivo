@@ -5,6 +5,7 @@ import { usersRoute } from "./route/user.route";
 import { HttpException } from "./utils/exception";
 
 const app = express();
+app.use(express.json());
 
 // v1 routes
 app.use("/v1/auth", usersRoute);
