@@ -17,8 +17,8 @@ export const signupHandler = catchAsync(
 	},
 );
 
-export const verifyEmailHandler: RequestHandler<VerifyEmailParams> = catchAsync(
-	async (req, res, next) => {
+export const verifyEmailHandler = catchAsync(
+	async (req: Request<VerifyEmailParams>, res, next) => {
 		await verifyEmail({ code: req.params.code });
 
 		res.status(STATUS.OK).json({ message: "Email was successfully verified" });
