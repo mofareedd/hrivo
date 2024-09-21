@@ -17,13 +17,10 @@ import type { Request } from "express";
 export const signupHandler = catchAsync(
 	async (req: Request<unknown, unknown, SignupInput>, res, next) => {
 		// Call signupUser service to create a new user
-		const { accessToken, refreshToken, userInfo } = await signupUser({
+		const { userInfo } = await signupUser({
 			user: req.body,
 			userAgent: req.headers["user-agent"],
 		});
-
-		// Set access and refresh tokens as cookies
-		setCookies({ res, accessToken, refreshToken });
 
 		// Send user info as response
 		res.status(STATUS.OK).json(userInfo);

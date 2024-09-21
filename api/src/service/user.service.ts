@@ -85,18 +85,10 @@ export async function signupUser({
 		);
 	}
 
-	// Generate JWT tokens for the user.
-	const refreshToken = signJwt({ id: session.id }, "refreshToken");
-
-	const accessToken = signJwt(
-		{ userId: newUser.id, sessionId: session.id },
-		"accessToken",
-	);
-
 	// Exclude the password from the user info
 	const { password, ...userInfo } = newUser;
 
-	return { userInfo, accessToken, refreshToken };
+	return { userInfo };
 }
 
 export async function verifyEmail({ code }: { code: string }) {
