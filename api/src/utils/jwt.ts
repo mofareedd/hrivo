@@ -11,27 +11,22 @@ export function signJwt(
 	options?: SignOptions,
 ) {
 	const secret =
-		keyName === "refreshToken"
-			? env.REFRESH_TOKEN_PRIVATE_KEY
-			: env.ACCESS_TOKEN_PRIVATE_KEY;
+		keyName === "refreshToken" ? env.REFRESH_TOKEN_KEY : env.ACCESS_TOKEN_KEY;
 	return jwt.sign(payload, secret, {
 		audience: ["auth"],
+		expiresIn: keyName === "refreshToken" ? "30d" : "15m",
 		...options,
 	});
 }
 
-export function verifyToken(
-	token: string,
-	keyName: "accessToken" | "refreshToken",
-	options: VerifyOptions,
-) {
+export function verifyJwt<
+	TPayload extends object = { userId: string; sessionId: string },
+>(token: string, keyName: "accessToken" | "refreshToken") {
 	const secret =
-		keyName === "refreshToken"
-			? env.REFRESH_TOKEN_PUBLIC_KEY
-			: env.ACCESS_TOKEN_PUBLIC_KEY;
+		keyName === "refreshToken" ? env.REFRESH_TOKEN_KEY : env.ACCESS_TOKEN_KEY;
 
 	try {
-		const decoded = jwt.verify(token, secret, options);
+		const decoded = jwt.verify(token, secret) as TPayload;
 		return decoded;
 	} catch (e) {
 		return null;

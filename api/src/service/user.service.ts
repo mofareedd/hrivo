@@ -1,10 +1,10 @@
 import { db } from "@/config/db";
 import { env } from "@/config/env";
 import { STATUS } from "@/constant/status";
-import type { SignupInput } from "@/schema/user.schema";
+import type { LoginInput, SignupInput } from "@/schema/user.schema";
 import { getVerifyEmailTemplate } from "@/utils/emailTemplate";
 import { HttpException } from "@/utils/exception";
-import { signJwt } from "@/utils/jwt";
+import { signJwt, verifyJwt } from "@/utils/jwt";
 import { sendingEmail } from "@/utils/sendEmail";
 import bcrypt from "bcrypt";
 
@@ -36,7 +36,7 @@ export async function signupUser({
 	// Throw an exception if the user registration fails.
 	if (!newUser) {
 		throw new HttpException(
-			"Ops! Failed to register user, Please try again later!",
+			"Failed to register user, Please try again later!",
 			STATUS.BAD_REQUEST,
 		);
 	}
@@ -78,22 +78,17 @@ export async function signupUser({
 
 	if (!session) {
 		throw new HttpException(
-			"Ops! Failed to create a session, Please try again later!",
-			STATUS.BAD_REQUEST,
+			"Failed to create a session, Please try again later!",
+			STATUS.INTERNAL_SERVER_ERROR,
 		);
 	}
 
 	// Generate JWT tokens for the user.
-	const refreshToken = signJwt({ id: session.id }, "refreshToken", {
-		expiresIn: "30d",
-	});
+	const refreshToken = signJwt({ id: session.id }, "refreshToken");
 
 	const accessToken = signJwt(
 		{ userId: newUser.id, sessionId: session.id },
 		"accessToken",
-		{
-			expiresIn: "15m",
-		},
 	);
 
 	// Exclude the password from the user info
@@ -124,7 +119,7 @@ export async function verifyEmail({ code }: { code: string }) {
 		.executeTakeFirst();
 
 	if (!user) {
-		throw new HttpException("User is not exisit", STATUS.BAD_REQUEST);
+		throw new HttpException("User is not exisit", STATUS.UNAUTHORIZED);
 	}
 
 	// Delete the verification record from the database
@@ -137,4 +132,78 @@ export async function verifyEmail({ code }: { code: string }) {
 	const { password, ...userInfo } = user;
 
 	return userInfo;
+}
+
+export async function loginUser({
+	user,
+	userAgent,
+}: { user: LoginInput; userAgent?: string }) {
+	// Check if the user exists in the database
+	const isUserExisit = await db
+		.selectFrom("users")
+		.selectAll()
+		.where("username", "=", user.username)
+		.executeTakeFirst();
+
+	// If user doesn't exist, throw an unauthorized error
+	if (!isUserExisit) {
+		throw new HttpException("User is not exisit", STATUS.UNAUTHORIZED);
+	}
+
+	// Compare the provided password with the stored hashed password
+	const comparePass = await bcrypt.compare(
+		user.password,
+		isUserExisit.password,
+	);
+
+	// If passwords don't match, throw an unauthorized error
+	if (!comparePass) {
+		throw new HttpException(
+			"Invalid username or password",
+			STATUS.UNAUTHORIZED,
+		);
+	}
+
+	// Create a new session for the user
+	const session = await db
+		.insertInto("sessions")
+		.values({ user_id: isUserExisit.id, user_agent: userAgent })
+		.returning("id")
+		.executeTakeFirst();
+
+	// If session creation fails, throw a bad request error
+	if (!session) {
+		throw new HttpException(
+			"Failed to create a session, Please try again later!",
+			STATUS.INTERNAL_SERVER_ERROR,
+		);
+	}
+
+	// Generate refresh and access tokens
+	const refreshToken = signJwt({ id: session.id }, "refreshToken");
+	const accessToken = signJwt(
+		{ userId: isUserExisit.id, id: session.id },
+		"accessToken",
+	);
+
+	// Exclude the password from the user info
+	const { password, ...userInfo } = isUserExisit;
+
+	// Return user info and tokens
+	return { userInfo, accessToken, refreshToken };
+}
+
+export async function logout({ token }: { token: string }) {
+	// Verify the access token
+	const decoded = verifyJwt(token, "accessToken");
+	// If token is invalid, throw an unauthorized error
+	if (!decoded) {
+		throw new HttpException("You are not authorized", STATUS.UNAUTHORIZED);
+	}
+
+	// Delete the user's session from the database
+	await db.deleteFrom("sessions").where("id", "=", decoded.userId).execute();
+
+	// Return the decoded token information
+	return decoded;
 }
