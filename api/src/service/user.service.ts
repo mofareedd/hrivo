@@ -176,7 +176,7 @@ export async function loginUser({
 	// Generate refresh and access tokens
 	const refreshToken = signJwt({ id: session.id }, "refreshToken");
 	const accessToken = signJwt(
-		{ userId: isUserExisit.id, id: session.id },
+		{ userId: isUserExisit.id, id: session.id, role: isUserExisit.role },
 		"accessToken",
 	);
 
