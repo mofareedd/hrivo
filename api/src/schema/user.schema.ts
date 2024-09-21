@@ -12,7 +12,7 @@ export const signupSchema = z.object({
 			.string({ required_error: "email field is required." })
 			.email("Invalid Email"),
 		phone_number: z.string().optional(),
-		role: z.enum(["super_admin", "admin"], {
+		role: z.enum(["super_admin", "admin", "user"], {
 			required_error: "role field is required",
 		}),
 		userAgent: z.string().optional(),

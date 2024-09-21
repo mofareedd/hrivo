@@ -5,7 +5,6 @@ import { type AnyZodObject, ZodError } from "zod";
 export const schemaValidator =
 	(schema: AnyZodObject) =>
 	async (req: Request, res: Response, next: NextFunction) => {
-		console.log(req.body);
 		try {
 			await schema.parseAsync({
 				body: req.body,

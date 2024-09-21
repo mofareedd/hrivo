@@ -1,11 +1,12 @@
+import cookieParser from "cookie-parser";
 import express from "express";
 import { STATUS } from "./constant/status";
 import { errorsHandler } from "./controller/errors";
 import { usersRoute } from "./route/user.route";
 import { HttpException } from "./utils/exception";
-
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 // v1 routes
 app.use("/v1/auth", usersRoute);
