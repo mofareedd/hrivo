@@ -1,10 +1,10 @@
-import { protectedRoute } from "@/controller/protected";
 import {
 	loginHandler,
 	logoutHandler,
 	signupHandler,
 	verifyEmailHandler,
 } from "@/controller/user.controller";
+import { protectedRoute } from "@/middleware/protected";
 import { schemaValidator } from "@/middleware/validator";
 import {
 	loginSchema,

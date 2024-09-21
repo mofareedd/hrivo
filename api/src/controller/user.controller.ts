@@ -12,7 +12,7 @@ import {
 } from "@/service/user.service";
 import { catchAsync } from "@/utils/catchAsync";
 import { clearCookies, setCookies } from "@/utils/cookies";
-import type { Request, RequestHandler } from "express";
+import type { Request } from "express";
 
 export const signupHandler = catchAsync(
 	async (req: Request<unknown, unknown, SignupInput>, res, next) => {

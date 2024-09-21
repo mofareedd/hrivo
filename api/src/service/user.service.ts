@@ -12,11 +12,13 @@ export async function signupUser({
 	user,
 	userAgent,
 }: { user: SignupInput; userAgent?: string }) {
-	// Check if the user already exists based on the email.
+	// Check if the user already exists based on the email or username.
 	const isUserExisit = await db
 		.selectFrom("users")
 		.select(["email", "username"])
-		.where("email", "=", user.email)
+		.where((eb) =>
+			eb("email", "=", user.email).or("username", "=", user.username),
+		)
 		.executeTakeFirst();
 
 	// Throw an exception if the user already exists.
