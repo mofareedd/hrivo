@@ -7,11 +7,17 @@ import type {
 import {
 	loginUser,
 	logout,
+	refreshAcessToken,
 	signupUser,
 	verifyEmail,
 } from "@/service/user.service";
 import { catchAsync } from "@/utils/catchAsync";
-import { clearCookies, setCookies } from "@/utils/cookies";
+import {
+	accessTokenOptions,
+	clearCookies,
+	refreshTokenOptions,
+	setCookies,
+} from "@/utils/cookies";
 import type { Request } from "express";
 
 export const signupHandler = catchAsync(
@@ -71,4 +77,27 @@ export const logoutHandler = catchAsync(async (req, res, next) => {
 
 	// Send success message as response
 	res.status(STATUS.OK).json({ message: "Logout successfully" });
+});
+
+export const refreshHandler = catchAsync(async (req, res, next) => {
+	// Get refresh token from cookies
+	const refreshToken = req.cookies.refreshToken as string;
+
+	// Call refreshAccessToken service to generate new tokens
+	const { newAccessToken, newRefreshToken } = await refreshAcessToken({
+		token: refreshToken,
+	});
+
+	// If a new refresh token is generated, set it as a cookie
+	if (newRefreshToken) {
+		res.cookie("refreshToken", newRefreshToken, { ...refreshTokenOptions() });
+	}
+
+	// Set the new access token as a cookie
+	res.cookie("accessToken", newAccessToken, { ...accessTokenOptions() });
+
+	// Send success message as response
+	res
+		.status(STATUS.OK)
+		.json({ message: "access token refreshed successfully" });
 });

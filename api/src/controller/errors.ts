@@ -19,6 +19,7 @@ export const errorsHandler = (
 	err.statusCode = err.statusCode || STATUS.INTERNAL_SERVER_ERROR;
 	err.message = err.message || "Internal Server Error";
 
+	console.log(err);
 	if (env.NODE_ENV === "development") {
 		res.status(err.statusCode).json({
 			status: err.status,

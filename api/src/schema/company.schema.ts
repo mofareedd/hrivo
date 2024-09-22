@@ -11,4 +11,13 @@ export const createCompanySchema = z.object({
 	}),
 });
 
+export const getCompanyByIdSchema = z.object({
+	params: z.object({
+		companyId: z.string().min(16),
+	}),
+});
+
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>["body"];
+export type GetCompanyByIdInput = z.infer<
+	typeof getCompanyByIdSchema
+>["params"];

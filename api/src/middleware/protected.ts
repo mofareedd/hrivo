@@ -33,7 +33,7 @@ export async function protectedRoute(
 }
 
 export const restrictRoute = (roles: UserRoles[]) => {
-	return () => (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, res: Response, next: NextFunction) => {
 		if (!roles.includes(req.role)) {
 			return next(
 				new HttpException("You are not authorized", STATUS.UNAUTHORIZED),
