@@ -1,9 +1,6 @@
 import { env } from "@/config/env";
-import jwt, {
-	type VerifyOptions,
-	type JwtPayload,
-	type SignOptions,
-} from "jsonwebtoken";
+import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken";
+import type { UserRoles } from "./types";
 
 export function signJwt(
 	payload: JwtPayload,
@@ -20,7 +17,11 @@ export function signJwt(
 }
 
 export function verifyJwt<
-	TPayload extends object = { userId: string; sessionId: string },
+	TPayload extends object = {
+		userId: string;
+		sessionId: string;
+		role: UserRoles;
+	},
 >(token: string, keyName: "accessToken" | "refreshToken") {
 	const secret =
 		keyName === "refreshToken" ? env.REFRESH_TOKEN_KEY : env.ACCESS_TOKEN_KEY;

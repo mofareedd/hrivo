@@ -2,11 +2,13 @@ import { db } from "@/config/db";
 import { env } from "@/config/env";
 import { STATUS } from "@/constant/status";
 import type { LoginInput, SignupInput } from "@/schema/user.schema";
+import { THIRTY_DAYS } from "@/utils/date";
 import { getVerifyEmailTemplate } from "@/utils/emailTemplate";
 import { HttpException } from "@/utils/exception";
 import { signJwt, verifyJwt } from "@/utils/jwt";
 import { sendingEmail } from "@/utils/sendEmail";
 import bcrypt from "bcrypt";
+import dayjs from "dayjs";
 
 export async function signupUser({
 	user,
@@ -174,9 +176,9 @@ export async function loginUser({
 	}
 
 	// Generate refresh and access tokens
-	const refreshToken = signJwt({ id: session.id }, "refreshToken");
+	const refreshToken = signJwt({ sessionId: session.id }, "refreshToken");
 	const accessToken = signJwt(
-		{ userId: isUserExisit.id, id: session.id },
+		{ userId: isUserExisit.id, id: session.id, role: isUserExisit.role },
 		"accessToken",
 	);
 
@@ -200,4 +202,55 @@ export async function logout({ token }: { token: string }) {
 
 	// Return the decoded token information
 	return decoded;
+}
+
+export async function refreshAcessToken({ token }: { token: string }) {
+	// Verify the access token
+	const decoded = verifyJwt(token, "refreshToken");
+	// If token is invalid, throw an unauthorized error
+	if (!decoded) {
+		throw new HttpException("You are not authorized", STATUS.UNAUTHORIZED);
+	}
+
+	const session = await db
+		.selectFrom("sessions")
+		.selectAll()
+		.where("id", "=", decoded.sessionId)
+		.executeTakeFirst();
+
+	if (
+		!session ||
+		!session.expire_at ||
+		(session.expire_at && session.expire_at.getTime() < Date.now())
+	) {
+		throw new HttpException("Session expired", STATUS.UNAUTHORIZED);
+	}
+
+	const isSessionNearExpiry =
+		session.expire_at.getTime() - Date.now() <=
+		dayjs().add(1, "day").toDate().getTime();
+
+	if (isSessionNearExpiry) {
+		await db
+			.updateTable("sessions")
+			.set({ expire_at: THIRTY_DAYS })
+			.where("id", "=", session.id)
+			.execute();
+	}
+
+	const newRefreshToken = isSessionNearExpiry
+		? signJwt({ sessionId: session.id }, "refreshToken")
+		: undefined;
+
+	const newAccessToken = signJwt(
+		{
+			sessionId: session.id,
+			userId: session.user_id,
+			role: decoded.role,
+		},
+		"accessToken",
+	);
+
+	// Return the decoded token information
+	return { newAccessToken, newRefreshToken };
 }

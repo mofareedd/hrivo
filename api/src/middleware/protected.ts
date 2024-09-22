@@ -1,7 +1,7 @@
 import { STATUS } from "@/constant/status";
 import { HttpException } from "@/utils/exception";
 import { verifyJwt } from "@/utils/jwt";
-import { UserRolesEnum } from "@/utils/types";
+import type { UserRoles } from "@/utils/types";
 import type { NextFunction, Request, Response } from "express";
 
 export async function protectedRoute(
@@ -27,16 +27,19 @@ export async function protectedRoute(
 
 	req.userId = decoded.userId;
 	req.sessionId = decoded.sessionId;
+	req.role = decoded.role;
 
 	next();
 }
 
-export const restrictRoute =
-	(role: "super_admin" | "admin" | "user") =>
-	(req: Request, res: Response, next: NextFunction) => {
-		if (role !== "super_admin") {
-			next(new HttpException("You are not authorized", STATUS.UNAUTHORIZED));
+export const restrictRoute = (roles: UserRoles[]) => {
+	return (req: Request, res: Response, next: NextFunction) => {
+		if (!roles.includes(req.role)) {
+			return next(
+				new HttpException("You are not authorized", STATUS.UNAUTHORIZED),
+			);
 		}
 
 		next();
 	};
+};

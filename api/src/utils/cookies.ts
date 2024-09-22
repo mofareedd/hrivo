@@ -1,6 +1,6 @@
 import { env } from "@/config/env";
-import dayjs from "dayjs";
-import type { Response } from "express";
+import type { CookieOptions, Response } from "express";
+import { FIFTEEN_MINUTE, THIRTY_DAYS } from "./date";
 
 type ISetCookies = {
 	res: Response;
@@ -8,17 +8,26 @@ type ISetCookies = {
 	refreshToken: string;
 };
 
+const defaultCookiesOptions: CookieOptions = {
+	httpOnly: true,
+	secure: true,
+};
+export const refreshTokenOptions = (): CookieOptions => ({
+	...defaultCookiesOptions,
+	expires: THIRTY_DAYS,
+	path: env.REFRESH_PATH,
+});
+
+export const accessTokenOptions = (): CookieOptions => ({
+	...defaultCookiesOptions,
+	expires: FIFTEEN_MINUTE,
+});
 export function setCookies({ res, accessToken, refreshToken }: ISetCookies) {
-	const FIFTEEN_MINUTE = dayjs().add(15, "minute").endOf("day").toDate();
-	const THIRTY_DAYS = dayjs().add(30, "day").toDate();
 	res
 		.cookie("accessToken", accessToken, {
-			expires: FIFTEEN_MINUTE,
+			...accessTokenOptions(),
 		})
-		.cookie("refreshToken", refreshToken, {
-			expires: THIRTY_DAYS,
-			path: env.REFRESH_PATH,
-		});
+		.cookie("refreshToken", refreshToken, { ...refreshTokenOptions() });
 }
 
 export function clearCookies(res: Response) {

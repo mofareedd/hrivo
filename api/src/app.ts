@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import { STATUS } from "./constant/status";
 import { errorsHandler } from "./controller/errors";
+import { companyRoute } from "./route/company.route";
 import { usersRoute } from "./route/user.route";
 import { HttpException } from "./utils/exception";
 const app = express();
@@ -10,6 +11,7 @@ app.use(cookieParser());
 
 // v1 routes
 app.use("/v1/auth", usersRoute);
+app.use("/v1/company", companyRoute);
 
 // Handle undefined routes
 app.all("*", (req, res, next) => {

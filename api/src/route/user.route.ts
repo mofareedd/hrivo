@@ -1,6 +1,7 @@
 import {
 	loginHandler,
 	logoutHandler,
+	refreshHandler,
 	signupHandler,
 	verifyEmailHandler,
 } from "@/controller/user.controller";
@@ -20,6 +21,7 @@ usersRoute.get("/", (req, res) => {
 });
 usersRoute.post("/signup", schemaValidator(signupSchema), signupHandler);
 usersRoute.post("/login", schemaValidator(loginSchema), loginHandler);
+usersRoute.get("/refresh", refreshHandler);
 usersRoute.get("/logout", protectedRoute, logoutHandler);
 usersRoute.get(
 	"/email/verify/:code",
