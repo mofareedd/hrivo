@@ -44,3 +44,18 @@ export async function getCompanyById(companyId: string) {
 
 	return company;
 }
+
+export async function deleteCompany(companyId: string) {
+	const company =
+		(await db
+			.deleteFrom("companies")
+			.where("id", "=", companyId)
+			.returningAll()
+			.executeTakeFirst()) ?? null;
+
+	if (!company) {
+		throw new HttpException("Company not found", STATUS.NOT_FOUND);
+	}
+
+	return company;
+}

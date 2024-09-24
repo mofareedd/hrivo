@@ -5,6 +5,7 @@ import type {
 } from "@/schema/company.schema";
 import {
 	createCompany,
+	deleteCompany,
 	getAllCompanies,
 	getCompanyById,
 } from "@/service/company.service";
@@ -32,6 +33,14 @@ export const createCompanyHandler = catchAsync(
 export const getCompanyByIdHandler = catchAsync(
 	async (req: Request<GetCompanyByIdInput>, res, next) => {
 		const company = await getCompanyById(req.params.companyId);
+
+		res.status(STATUS.OK).json(company);
+	},
+);
+
+export const deleteCompanyHandler = catchAsync(
+	async (req: Request<GetCompanyByIdInput>, res, next) => {
+		const company = await deleteCompany(req.params.companyId);
 
 		res.status(STATUS.OK).json(company);
 	},

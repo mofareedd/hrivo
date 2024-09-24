@@ -1,5 +1,6 @@
 import {
 	createCompanyHandler,
+	deleteCompanyHandler,
 	getAllCompaniesHandler,
 	getCompanyByIdHandler,
 } from "@/controller/company.controller";
@@ -34,6 +35,7 @@ companyRoute
 		restrictRoute(["super_admin", "admin"]),
 		schemaValidator(getCompanyByIdSchema),
 		getCompanyByIdHandler,
-	);
+	)
+	.delete(protectedRoute, restrictRoute(["super_admin"]), deleteCompanyHandler);
 
 export { companyRoute };
