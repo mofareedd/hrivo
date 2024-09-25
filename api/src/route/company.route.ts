@@ -32,7 +32,6 @@ companyRoute
 	.route("/:companyId")
 	.get(
 		protectedRoute,
-		restrictRoute(["super_admin", "admin"]),
 		schemaValidator(getCompanyByIdSchema),
 		getCompanyByIdHandler,
 	)
