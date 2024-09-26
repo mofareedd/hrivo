@@ -11,6 +11,19 @@ export const createCompanySchema = z.object({
 	}),
 });
 
+export const createDepartmentSchema = z.object({
+	body: z.object({
+		name: z.string({ required_error: "name is required" }),
+		// description: z.string()¿,
+		description: z.string().optional(),
+	}),
+	params: z.object({
+		companyId: z
+			.string({ required_error: "company id params is missing" })
+			.min(16),
+	}),
+});
+
 export const getCompanyByIdSchema = z.object({
 	params: z.object({
 		companyId: z.string().min(16),
@@ -18,6 +31,7 @@ export const getCompanyByIdSchema = z.object({
 });
 
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>["body"];
+export type CreateDepartmentInput = z.infer<typeof createDepartmentSchema>;
 export type GetCompanyByIdInput = z.infer<
 	typeof getCompanyByIdSchema
 >["params"];

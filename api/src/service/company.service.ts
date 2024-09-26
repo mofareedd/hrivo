@@ -2,6 +2,7 @@ import { db } from "@/config/db";
 import { STATUS } from "@/constant/status";
 import type {
 	CreateCompanyInput,
+	CreateDepartmentInput,
 	GetCompanyByIdInput,
 } from "@/schema/company.schema";
 import { HttpException } from "@/utils/exception";
@@ -59,3 +60,59 @@ export async function deleteCompany(companyId: string) {
 
 	return company;
 }
+
+//  ========== department business logic ==============
+
+export async function getAllDepartments({ input }: { input: string }) {
+	return await db.selectFrom("departments").selectAll().execute();
+}
+
+type ExtendedCreateDepartmentInputBody = CreateDepartmentInput["body"] & {
+	company_id: string;
+};
+export async function createDepartment({
+	input,
+	token,
+}: { input: ExtendedCreateDepartmentInputBody; token: string }) {
+	const decodedToken = verifyJwt(token, "accessToken");
+
+	if (!decodedToken) {
+		throw new HttpException("You are not authorized", STATUS.UNAUTHORIZED);
+	}
+
+	return await db
+		.insertInto("departments")
+		.values({ ...input })
+		.execute();
+}
+
+// export async function getCompanyById(companyId: string) {
+// 	const company =
+// 		(await db
+// 			.selectFrom("companies")
+// 			.selectAll()
+// 			.where("id", "=", companyId)
+// 			.executeTakeFirst()) ?? null;
+
+// 	console.log(company);
+// 	if (!company) {
+// 		throw new HttpException("Company not found", STATUS.NOT_FOUND);
+// 	}
+
+// 	return company;
+// }
+
+// export async function deleteCompany(companyId: string) {
+// 	const company =
+// 		(await db
+// 			.deleteFrom("companies")
+// 			.where("id", "=", companyId)
+// 			.returningAll()
+// 			.executeTakeFirst()) ?? null;
+
+// 	if (!company) {
+// 		throw new HttpException("Company not found", STATUS.NOT_FOUND);
+// 	}
+
+// 	return company;
+// }
